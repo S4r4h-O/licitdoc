@@ -14,7 +14,7 @@ model Company {
   razaoSocial  String  @unique @db.VarChar(150)
   nomeFantasia String  @db.VarChar(100)
   logo         String?
-  cnpj         String  @unique @db.VarChar(14)
+  cnpj         String  @unique @db.VarChar(18)
   email        String  @unique @db.VarChar(50)
   phone        String? @db.VarChar(20)
 
@@ -60,8 +60,8 @@ model User {
   name    String?
   image   String?
 
-  companyId String  @db.Uuid
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?  @db.Uuid
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -71,18 +71,35 @@ model User {
   @@index([companyId])
 }
 
+// ------------------- ÓRGÃOS -------------------
+
+model ContractingAuthority {
+  id           String  @id @default(uuid()) @db.Uuid
+  name         String  @db.VarChar(100)
+  addressState String?
+  addressCity  String?
+
+  licitacoes Licitacao[]
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+}
+
 // ------------------- LICITAÇÕES -------------------
 
 model Licitacao {
-  id          String    @id @default(uuid()) @db.Uuid
-  companyId   String    @db.Uuid
-  number      String    @db.VarChar(50)
-  buyer       String    @db.VarChar(100)
-  openingDate DateTime?
+  id              String    @id @default(uuid()) @db.Uuid
+  companyId       String    @db.Uuid
+  contactorId     String    @db.Uuid
+  licitacaoNumber String?   @db.VarChar(50)
+  processNumber   String?
+  buyer           String    @db.VarChar(100)
+  openingDate     DateTime?
 
   requirements LicitacaoRequirement[]
   submissions  LicitacaoSubmission[]
   company      Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contractor   ContractingAuthority   @relation(fields: [contactorId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -106,10 +123,11 @@ enum DocumentStatus {
 }
 
 model DocumentRequirement {
-  id        String @id @default(uuid()) @db.Uuid
-  companyId String @db.Uuid
-  userId    String @db.Uuid
-  name      String @db.VarChar(100)
+  id                String             @id @default(uuid()) @db.Uuid
+  companyId         String             @db.Uuid
+  userId            String             @db.Uuid
+  name              String             @db.VarChar(100)
+  jurisdictionLevel JurisdictionLevel?
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
@@ -133,11 +151,10 @@ model DocumentFile {
   fileUrl  String
   fileSize Int?
 
-  issuingAuthority  String?
-  jurisdictionLevel JurisdictionLevel?
-  issueDate         DateTime?
-  expirationDate    DateTime?
-  documentNumber    String?
+  issuingAuthority String?
+  issueDate        DateTime?
+  expirationDate   DateTime?
+  documentNumber   String?
 
   status DocumentStatus @default(VALIDO)
 
