@@ -2,4 +2,5 @@ onlyBuiltDependencies:
   - '@clerk/shared'
   - '@prisma/engines'
   - aws-sdk
+  - core-js-pure
   - prisma
