@@ -1,27 +1,41 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "../ui/button";
 import { FieldGroup } from "../ui/field";
 
+import { createCompany } from "@/lib/actions/company.action";
 import { createCompanyDefaultValues } from "@/lib/contants/defaultValues";
 import { CompanySchemaInsert } from "@/lib/validators";
 import FormInput from "../input";
 
 type FormData = z.infer<typeof CompanySchemaInsert>;
 
-export default function CreateCompanyForm({ orgId }: { orgId: string }) {
+export default function CreateCompanyForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(CompanySchemaInsert),
     defaultValues: createCompanyDefaultValues,
   });
 
-  async function onSubmit(data: FormData) {
-    form.setValue("clerkOrgId", orgId);
+  const router = useRouter();
 
+  async function onSubmit(data: FormData) {
+    console.log("Attempting to create company");
     console.log(data);
+
+    const res = await createCompany(data);
+
+    if (!res.success) {
+      toast.error(res.message);
+      return;
+    }
+
+    toast.success(res.message);
+    router.push("/empresa/dashboard");
   }
 
   const formName = "create-company-form";
@@ -71,7 +85,7 @@ export default function CreateCompanyForm({ orgId }: { orgId: string }) {
               label="CNPJ*"
               formName={formName}
               placeholder="00.000.000/0001-00"
-              input="input"
+              mask="00.000.000/0000-00"
             />
             <FormInput
               form={form}
@@ -79,7 +93,7 @@ export default function CreateCompanyForm({ orgId }: { orgId: string }) {
               label="Telefone*"
               formName={formName}
               placeholder="11 4002-8922"
-              input="input"
+              mask="00 0000-0000"
             />
           </div>
         </div>
@@ -142,6 +156,7 @@ export default function CreateCompanyForm({ orgId }: { orgId: string }) {
               formName={formName}
               placeholder="000000-00"
               input="input"
+              mask="000000-00"
             />
           </div>
         </div>
@@ -154,13 +169,13 @@ export default function CreateCompanyForm({ orgId }: { orgId: string }) {
         >
           Cancelar
         </Button>
-        <button
+        <Button
           type="submit"
-          onClick={() => {}}
+          disabled={form.formState.isSubmitting}
           className="px-6 py-2.5 text-white bg-[#3498DB] hover:bg-[#2980B9] rounded-lg font-medium transition-colors shadow-lg shadow-[#3498DB]/20"
         >
-          Criar empresa
-        </button>
+          {form.formState.isSubmitting ? "Criando..." : "Criar empresa"}
+        </Button>
       </div>
     </form>
   );
