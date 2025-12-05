@@ -13,3 +13,9 @@ export const createCompanyDefaultValues = {
   addressCity: "",
   addressZip: "",
 };
+
+export const createAuthorityDefaultValues = {
+  name: "",
+  addressState: "",
+  addressCity: "",
+};
