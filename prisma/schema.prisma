@@ -10,7 +10,7 @@ datasource db {
 
 model Company {
   id           String  @id @default(uuid()) @db.Uuid
-  clerkOrgId   String?
+  clerkOrgId   String? @unique
   razaoSocial  String  @unique @db.VarChar(150)
   nomeFantasia String  @db.VarChar(100)
   logo         String?
@@ -24,10 +24,10 @@ model Company {
   addressCountry    String
   addressCity       String
   addressState      String  @db.VarChar(2)
-  addressZip        String  @db.VarChar(8)
+  addressZip        String  @db.VarChar(9)
 
   status CompanyStatus @default(ATIVA)
-  plan   Plans
+  plan   Plans?
 
   members              User[]
   documentRequirements DocumentRequirement[]
