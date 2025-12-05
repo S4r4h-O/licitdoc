@@ -4,6 +4,7 @@ import { Controller, FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { IMaskInput } from "react-imask";
 
 interface FormInputProps<T extends FieldValues> {
   form: UseFormReturn<T>;
@@ -12,7 +13,8 @@ interface FormInputProps<T extends FieldValues> {
   formName: string;
   placeholder?: string;
   type?: string;
-  input: "input" | "textarea";
+  mask?: string;
+  input?: "input" | "textarea";
 }
 
 export default function FormInput<T extends FieldValues>({
@@ -23,6 +25,7 @@ export default function FormInput<T extends FieldValues>({
   placeholder,
   type,
   input = "input",
+  mask,
 }: FormInputProps<T>) {
   return (
     <>
@@ -32,13 +35,25 @@ export default function FormInput<T extends FieldValues>({
         render={({ field, fieldState }) => (
           <Field>
             <FieldLabel>{label}</FieldLabel>
-            {input === "input" ? (
+            {mask ? (
+              <IMaskInput
+                {...field}
+                mask={mask}
+                id={`${formName}-${fieldName}`}
+                placeholder={placeholder}
+                autoComplete="off"
+                lazy={false}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-accent"
+                onAccept={(value) => field.onChange(value)}
+              />
+            ) : input === "input" ? (
               <Input
                 {...field}
                 id={`${formName}-${fieldName}`}
                 placeholder={placeholder}
                 autoComplete="off"
                 type={type}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-accent"
               />
             ) : (
               <Textarea
@@ -46,6 +61,7 @@ export default function FormInput<T extends FieldValues>({
                 id={`${formName}-${fieldName}`}
                 placeholder={placeholder}
                 autoComplete="off"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-accent"
               />
             )}
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
