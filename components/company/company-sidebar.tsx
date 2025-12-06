@@ -1,4 +1,10 @@
-import { BookOpen, Landmark, LucideIcon, Settings } from "lucide-react";
+import {
+  BookOpen,
+  Landmark,
+  LayoutDashboard,
+  LucideIcon,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -22,6 +28,7 @@ interface SidebarItem {
 
 export default function CompanySidebar() {
   const items = [
+    { title: "Dashboard", href: "/empresa/dashboard", icon: LayoutDashboard },
     { title: "Órgãos", href: "/empresa/orgaos", icon: Landmark },
     { title: "Requisitos", href: "/empresa/requisitos", icon: FilePlus },
     { title: "Documentos", href: "/empresa/licitacoes", icon: BookOpen },
