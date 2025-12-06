@@ -23,7 +23,7 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 - **Backend**: Next.js API Routes.
 - **Banco de Dados**: PostgreSQL.
 - **Automação**: node-cron, Nodemailer.
-- **Storage**: AWS S3 ou alternativas como Backblaze B2.
+- **Storage**: AWS S3.
 - **Autenticação**: Clerk.
 
 ---
