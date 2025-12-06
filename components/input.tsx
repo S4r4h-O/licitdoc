@@ -43,7 +43,7 @@ export default function FormInput<T extends FieldValues>({
                 placeholder={placeholder}
                 autoComplete="off"
                 lazy={false}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-accent"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md"
                 onAccept={(value) => field.onChange(value)}
               />
             ) : input === "input" ? (
@@ -53,7 +53,7 @@ export default function FormInput<T extends FieldValues>({
                 placeholder={placeholder}
                 autoComplete="off"
                 type={type}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-accent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             ) : (
               <Textarea
@@ -61,7 +61,7 @@ export default function FormInput<T extends FieldValues>({
                 id={`${formName}-${fieldName}`}
                 placeholder={placeholder}
                 autoComplete="off"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-accent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             )}
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
