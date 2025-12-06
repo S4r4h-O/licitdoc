@@ -33,7 +33,6 @@ export default function CompanySidebar() {
     { title: "Órgãos", href: "/empresa/orgaos", icon: Landmark },
     { title: "Requisitos", href: "/empresa/requisitos", icon: FilePlus },
     { title: "Licitações", href: "/empresa/licitacoes", icon: Handshake },
-    { title: "Documentos", href: "/empresa/licitacoes", icon: BookOpen },
     { title: "Configurações", href: "/empresa/configuracoes", icon: Settings },
   ];
 
