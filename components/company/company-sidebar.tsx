@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Handshake,
   Landmark,
   LayoutDashboard,
   LucideIcon,
@@ -31,6 +32,7 @@ export default function CompanySidebar() {
     { title: "Dashboard", href: "/empresa/dashboard", icon: LayoutDashboard },
     { title: "Órgãos", href: "/empresa/orgaos", icon: Landmark },
     { title: "Requisitos", href: "/empresa/requisitos", icon: FilePlus },
+    { title: "Licitações", href: "/empresa/licitacoes", icon: Handshake },
     { title: "Documentos", href: "/empresa/licitacoes", icon: BookOpen },
     { title: "Configurações", href: "/empresa/configuracoes", icon: Settings },
   ];
