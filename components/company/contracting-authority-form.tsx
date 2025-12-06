@@ -1,12 +1,11 @@
 "use client";
 
-import {
-  ContractingAuthorityInsertSchema,
-  ContractingAuthoritySchema,
-} from "@/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "../ui/button";
 import {
@@ -16,13 +15,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTrigger,
   DialogTitle,
+  DialogTrigger,
 } from "../ui/dialog";
-
-import { brStates } from "@/lib/contants/contants";
-import { createAuthorityDefaultValues } from "@/lib/contants/defaultValues";
-import FormInput from "../input";
 import {
   Select,
   SelectContent,
@@ -32,27 +27,78 @@ import {
   SelectValue,
 } from "../ui/select";
 
-type FormData = z.infer<typeof ContractingAuthorityInsertSchema>;
+import {
+  createContractingAuthority,
+  updateAuthority,
+} from "@/lib/actions/authority.actions";
+import { brStates } from "@/lib/contants/contants";
+import { createAuthorityDefaultValues } from "@/lib/contants/defaultValues";
+import { ContractingAuthorityFormSchema } from "@/lib/validators";
+import { ContractingAuthority } from "@prisma/client";
+import FormInput from "../input";
 
-export default function ContractingAuthorityForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(ContractingAuthorityInsertSchema),
-    defaultValues: createAuthorityDefaultValues,
+export default function ContractingAuthorityForm({
+  mode,
+  authority,
+}: {
+  mode: "create" | "update";
+  authority?: ContractingAuthority;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof ContractingAuthorityFormSchema>>({
+    resolver: zodResolver(ContractingAuthorityFormSchema),
+    defaultValues:
+      mode === "create"
+        ? createAuthorityDefaultValues
+        : {
+            name: authority?.name ?? "",
+            addressCity: authority?.addressCity ?? undefined,
+            addressState: authority?.addressState ?? undefined,
+          },
   });
 
-  async function onSubmit(data: z.output<typeof ContractingAuthoritySchema>) {
-    console.log(data);
+  const router = useRouter();
+
+  async function onSubmit(
+    data: z.output<typeof ContractingAuthorityFormSchema>,
+  ) {
+    if (mode === "create") {
+      const res = await createContractingAuthority(data);
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
+
+      toast.success(res.message);
+      setOpen(false);
+      router.refresh();
+    } else {
+      const res = await updateAuthority(authority!.id, data);
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
+
+      toast.success(res.message);
+      setOpen(false);
+      router.refresh();
+    }
   }
 
   const formName = "create-authority-form";
 
   return (
     <div>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="default" className="flex gap-2">
-            <Plus size={16} /> Novo Órgão
-          </Button>
+          {mode === "create" ? (
+            <Button variant="default" className="flex gap-2">
+              <Plus size={16} /> Novo Órgão
+            </Button>
+          ) : (
+            <span className="w-full">Editar</span>
+          )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-[500px]">
           <form id={formName} onSubmit={form.handleSubmit(onSubmit)}>
@@ -116,7 +162,9 @@ export default function ContractingAuthorityForm() {
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit">Salvar Órgão</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
