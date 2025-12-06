@@ -8,6 +8,7 @@ export const DocumentFileSchema = z.object({
   fileUrl: z.string().url().min(1, "URL não pode ficar vazia"),
   fileSize: z.number().optional(),
   issuingAuthority: z.string().optional(),
+  s3Key: z.string().optional(),
   issueDate: z.date().optional(),
   expirationDate: z.date().optional(),
   documentNumber: z.string().optional(),
