@@ -35,6 +35,11 @@ export default function DocumentFileForm({
 }: {
   requirement: DocumentRequirement;
 }) {
+  /* The upload key is needed to destroy the old
+   * state of the UploadFile component and therefore
+   * cleaning the input
+   */
+  const [uploadKey, setUploadKey] = useState(0);
   const [file, setFile] = useState<File | null>(null);
 
   const { VALIDO, INVALIDO } = DocumentStatus;
@@ -65,6 +70,7 @@ export default function DocumentFileForm({
       const buffer = await file.arrayBuffer();
       const base64 = Buffer.from(buffer).toString("base64");
       const { key, fileUrl } = await uploadFileToS3(base64, file.name);
+      form.setValue("s3Key", key);
 
       const res = await createDocumentFile(
         {
@@ -72,8 +78,9 @@ export default function DocumentFileForm({
           fileUrl,
           fileSize: file.size,
           fileName: file.name,
+          s3Key: key,
         },
-        requirement,
+        requirement.id,
       );
 
       if (!res.success) {
@@ -84,6 +91,7 @@ export default function DocumentFileForm({
       toast.success(res.message);
       form.reset();
       setFile(null);
+      setUploadKey((prev) => prev + 1);
       router.refresh();
     } catch (error) {
       console.error("Upload error:", error);
@@ -257,6 +265,7 @@ export default function DocumentFileForm({
 
           <div className="col-span-1 md:col-span-2 pt-2">
             <UploadFile
+              key={uploadKey}
               form={form}
               fieldName="fileUrl"
               onUpload={(uploadedFile) => setFile(uploadedFile)}
@@ -265,7 +274,14 @@ export default function DocumentFileForm({
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-          <Button variant="ghost" type="button" onClick={() => form.reset()}>
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              form.reset;
+              setUploadKey((prev) => prev + 1);
+            }}
+          >
             Limpar
           </Button>
           <Button
