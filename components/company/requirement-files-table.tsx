@@ -1,5 +1,6 @@
 "use client";
 
+import { DocumentFile } from "@prisma/client";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,15 +13,22 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  Copy,
+  Download,
+  MoreHorizontal,
+  Trash,
+} from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
@@ -32,9 +40,10 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { DocumentFile } from "@prisma/client";
-import * as React from "react";
+
 import { formatFileSize } from "@/lib/utils";
+import DeleteDialog from "../delete-dialog";
+import { deleteDocumentFile } from "@/lib/actions/document-file.actions";
 
 export default function RequirementFilesTable({
   data,
@@ -103,7 +112,12 @@ export default function RequirementFilesTable({
             </Button>
           );
         },
-        cell: ({ row }) => <div>{row.getValue("issueDate")}</div>,
+        cell: ({ row }) => {
+          const date = (row.getValue("issueDate") as Date) || null;
+          if (!data) return <span className="text-muted-foreground">-</span>;
+
+          return <div>{date.toLocaleDateString("pt-BR")}</div>;
+        },
       },
       {
         accessorKey: "expirationDate",
@@ -119,7 +133,12 @@ export default function RequirementFilesTable({
             </Button>
           );
         },
-        cell: ({ row }) => <div>{row.getValue("expirationDate")}</div>,
+        cell: ({ row }) => {
+          const date = (row.getValue("issueDate") as Date) || null;
+          if (!data) return <span className="text-muted-foreground">-</span>;
+
+          return <div>{date.toLocaleDateString("pt-BR")}</div>;
+        },
       },
       {
         accessorKey: "status",
@@ -161,20 +180,50 @@ export default function RequirementFilesTable({
         ),
       },
       {
-        accessorKey: "fileUrl",
-        header: "Link",
-        cell: ({ row }) => (
-          <a
-            href={row.getValue("fileUrl")}
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            Abrir
-          </a>
-        ),
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const url = row.original.fileUrl;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Abrir menu</span>
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="">
+                <DropdownMenuItem>
+                  <Link href={url} className="flex gap-4">
+                    <Download /> Baixar arquivo
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigator.clipboard.writeText(url)}
+                  className="flex gap-4"
+                >
+                  <Copy /> Copiar url
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex gap-4 text-red-600"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Trash />{" "}
+                  <DeleteDialog
+                    onConfirm={async () =>
+                      await deleteDocumentFile(
+                        row.original.s3Key!,
+                        row.original.id,
+                      )
+                    }
+                  />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
       },
-      // TODO: ACTIONS HERE
     ],
     [],
   );
@@ -196,6 +245,17 @@ export default function RequirementFilesTable({
     },
   });
 
+  const columnLabels: Record<string, string> = {
+    fileName: "Nome do arquivo",
+    fileSize: "Tamanho",
+    issuingAuthority: "Órgão Expeditor",
+    issueDate: "Emissão",
+    expirationDate: "Vencimento",
+    documentNumber: "Nº Documento",
+    status: "Status",
+    fileUrl: "Link",
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -211,7 +271,7 @@ export default function RequirementFilesTable({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
+              Colunas <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -228,7 +288,7 @@ export default function RequirementFilesTable({
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id}
+                    {columnLabels[column.id] || column.id}
                   </DropdownMenuCheckboxItem>
                 );
               })}
