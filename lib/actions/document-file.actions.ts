@@ -2,7 +2,7 @@
 
 import { prisma } from "@/prisma/client";
 import { auth } from "@clerk/nextjs/server";
-import { DocumentFile, DocumentRequirement } from "@prisma/client";
+import { DocumentFile } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -11,10 +11,11 @@ import {
   DocumentFileFormSchema,
   DocumentFileInsertSchema,
 } from "../validators";
+import { deleteFileFromS3 } from "./s3.actions";
 
 export async function createDocumentFile(
   data: z.infer<typeof DocumentFileFormSchema>,
-  requirement: DocumentRequirement,
+  requirementId: string,
 ): Promise<{ success: boolean; message: any }> {
   const { orgId: clerkOrgId, userId: clerkUserId } = await auth();
 
@@ -32,11 +33,11 @@ export async function createDocumentFile(
     await prisma.documentFile.create({
       data: {
         ...validated,
-        requirement: { connect: { id: requirement.id } },
+        requirement: { connect: { id: requirementId } },
       },
     });
 
-    revalidatePath(`/empresa/requisitos/${requirement.id}`);
+    revalidatePath(`/empresa/requisitos/${requirementId}`);
     return { success: true, message: "Arquivo criado com succeso" };
   } catch (error) {
     console.error(error);
@@ -70,4 +71,37 @@ export async function getFilesByRequirementId(
   });
 
   return requirementFiles;
+}
+
+export async function deleteDocumentFile(objectKey: string, fileId: string) {
+  const { orgId: clerkOrgId, userId: clerkUserId } = await auth();
+
+  if (!clerkOrgId) {
+    throw new Error("Organização não encontrada");
+  }
+
+  if (!clerkUserId) {
+    throw new Error("Não autenticado");
+  }
+
+  const existingFile = await prisma.documentFile.findUnique({
+    where: { id: fileId },
+  });
+
+  if (!existingFile) {
+    throw new Error("Arquivo não encontrado");
+  }
+
+  try {
+    await prisma.documentFile.delete({
+      where: { id: fileId },
+    });
+
+    await deleteFileFromS3(objectKey);
+
+    return { success: true, message: "Arquivo deletado com succeso" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: formatError(error) };
+  }
 }
