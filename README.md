@@ -56,3 +56,10 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 
 4. **Validação via API Externa**:
    - Consulta APIs de órgãos públicos para validar documentos.
+
+---
+
+## TODOS
+
+- [ ] Abstract data tables
+- [ ] Use Prisma types instead of manually created types
