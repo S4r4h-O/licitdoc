@@ -54,9 +54,6 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
    - Usuário seleciona um edital.
    - Sistema lista documentos exigidos e gera um ZIP.
 
-4. **Validação via API Externa**:
-   - Consulta APIs de órgãos públicos para validar documentos.
-
 ---
 
 ## TODOS
@@ -66,3 +63,4 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 - [ ] Abstract document upload
 - [ ] Extract document information for auto filling
 - [ ] Not found errors for details pages
+- [ ] Do not use direct S3 links
