@@ -2,6 +2,12 @@
 
 Sistema de Gestão Documental para Licitações
 
+Obs: até a presente data esse sistema é apenas uma demonstração, tendo em vista
+que ainda não tenho planos de comercializar planos. Entre em contato comigo se gostaria de
+implantá-lo e precisa de suporte
+
+Obs2: Ainda há funcionalidades inacabadas, trabalharei nelas em meu tempo livre.
+
 ---
 
 ## Visão Geral
@@ -34,7 +40,6 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 - **Gerenciamento de Documentos**: Upload, metadados e controle de validade.
 - **Alertas Automáticos**: Notificações por e-mail/Slack para documentos próximos do vencimento.
 - **Montagem de Pastas**: Seleção automática de documentos com base nos requisitos do edital.
-- **Integração com APIs**: Validação de certidões em órgãos públicos (ex: Receita Federal).
 - **Relatórios**: Exportação de dados para CSV/PDF.
 - **Geração de Pasta Zip**: Download de documentos selecionados em formato ZIP.
 
