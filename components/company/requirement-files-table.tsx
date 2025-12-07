@@ -44,6 +44,7 @@ import {
 import { formatFileSize } from "@/lib/utils";
 import DeleteDialog from "../delete-dialog";
 import { deleteDocumentFile } from "@/lib/actions/document-file.actions";
+import DataTable from "../data-table";
 
 export default function RequirementFilesTable({
   data,
@@ -113,8 +114,8 @@ export default function RequirementFilesTable({
           );
         },
         cell: ({ row }) => {
-          const date = (row.getValue("issueDate") as Date) || null;
-          if (!data) return <span className="text-muted-foreground">-</span>;
+          const date = (row.getValue("issueDate") as Date) || undefined;
+          if (!date) return <span className="text-muted-foreground">-</span>;
 
           return <div>{date.toLocaleDateString("pt-BR")}</div>;
         },
@@ -134,8 +135,8 @@ export default function RequirementFilesTable({
           );
         },
         cell: ({ row }) => {
-          const date = (row.getValue("issueDate") as Date) || null;
-          if (!data) return <span className="text-muted-foreground">-</span>;
+          const date = (row.getValue("issueDate") as Date) || undefined;
+          if (!date) return <span className="text-muted-foreground">-</span>;
 
           return <div>{date.toLocaleDateString("pt-BR")}</div>;
         },
