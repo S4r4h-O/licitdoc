@@ -65,3 +65,4 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 - [ ] Use Prisma types instead of manually created types
 - [ ] Abstract document upload
 - [ ] Extract document information for auto filling
+- [ ] Not found errors for details pages
