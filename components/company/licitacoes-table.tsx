@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   Trash,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "../ui/button";
 import {
@@ -39,6 +40,9 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+
+import { deleteLicitacao } from "@/lib/actions/licitacao.actions";
+import DeleteDialog from "../delete-dialog";
 
 type LicitacaoWithContractor = Licitacao & {
   contractor: ContractingAuthority;
@@ -111,11 +115,22 @@ export default function LicitacoesTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuItem>
-                <Eye /> Ver
+              <DropdownMenuItem className="">
+                <Link
+                  href={`/empresa/licitacoes/${row.original.id}`}
+                  className="flex gap-4"
+                >
+                  <Eye className="" /> Ver
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Trash /> Apagar
+              <DropdownMenuItem
+                className="flex gap-4 text-red-500"
+                onSelect={(e) => e.preventDefault()}
+              >
+                <Trash />{" "}
+                <DeleteDialog
+                  onConfirm={async () => await deleteLicitacao(row.original.id)}
+                />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
