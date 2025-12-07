@@ -8,7 +8,7 @@ export default async function AuthoritiesPage() {
   return (
     <div className="flex flex-col gap-6 p-6 w-full max-w-full h-full">
       <div className="flex w-full items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-3xl font-bold tracking-tight">
           Órgãos Cadastrados
         </h1>
 
