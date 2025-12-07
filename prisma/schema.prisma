@@ -182,7 +182,7 @@ model LicitacaoRequirement {
   requirementId String @db.Uuid
 
   licitacao   Licitacao           @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
-  requirement DocumentRequirement @relation(fields: [requirementId], references: [id])
+  requirement DocumentRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
