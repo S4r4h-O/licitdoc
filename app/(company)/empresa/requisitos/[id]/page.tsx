@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import DocumentFileForm from "@/components/company/requirement-file-form";
 import RequirementFilesTable from "@/components/company/requirement-files-table";
 import UpdateDocumentRequirementForm from "@/components/company/update-requirement-form";
@@ -11,19 +13,26 @@ export default async function RequirementDetailsPage({
 }) {
   const { id } = await params;
 
-  const docRequirement = await getDocumentRequirementById(id);
-  const requirementFiles = await getFilesByRequirementId(docRequirement.id);
+  // Is getDocumentRequirementById necessary?
+  try {
+    const [docRequirement, requirementFiles] = await Promise.all([
+      getDocumentRequirementById(id),
+      getFilesByRequirementId(id),
+    ]);
 
-  return (
-    <div>
-      <UpdateDocumentRequirementForm docRequirement={docRequirement} />
-      <hr />
-      <DocumentFileForm requirement={docRequirement} />
-      <hr />
-      <div className="p-6">
-        <h1 className="font-bold text-2xl">Documentos enviados</h1>
-        <RequirementFilesTable data={requirementFiles} />
+    return (
+      <div>
+        <UpdateDocumentRequirementForm docRequirement={docRequirement} />
+        <hr />
+        <DocumentFileForm requirement={docRequirement} />
+        <hr />
+        <div className="p-6">
+          <h1 className="font-bold text-2xl">Documentos enviados</h1>
+          <RequirementFilesTable data={requirementFiles} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    notFound();
+  }
 }
