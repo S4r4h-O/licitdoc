@@ -33,6 +33,8 @@ import {
 
 import { DocumentRequirement } from "@prisma/client";
 import Link from "next/link";
+import DeleteDialog from "../delete-dialog";
+import { deleteDocumentRequirement } from "@/lib/actions/doc-requirement.actions";
 
 export default function DocumentRequirementTable({
   data,
@@ -106,7 +108,12 @@ export default function DocumentRequirementTable({
                 className="flex cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-md"
                 onSelect={(e) => e.preventDefault()}
               >
-                <Trash className="mr-2 h-4 w-4" /> Apagar
+                <Trash className="mr-2 h-4 w-4" />{" "}
+                <DeleteDialog
+                  onConfirm={async () =>
+                    deleteDocumentRequirement(row.original.id)
+                  }
+                />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
