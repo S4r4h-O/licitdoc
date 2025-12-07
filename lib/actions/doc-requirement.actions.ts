@@ -112,3 +112,35 @@ export async function updateDocumentRequirement(
     return { success: false, message: formatError(error) };
   }
 }
+
+export async function deleteDocumentRequirement(
+  requirementId: string,
+): Promise<{ success: boolean; message: any }> {
+  const { orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId) {
+    return { success: false, message: "Organization not found" };
+  }
+
+  const docRequirement = await prisma.documentRequirement.findFirst({
+    where: { id: requirementId, company: { clerkOrgId } },
+  });
+
+  if (!docRequirement) {
+    return {
+      success: false,
+      message: "Requisito não existe ou não encontrado",
+    };
+  }
+
+  try {
+    await prisma.documentRequirement.delete({
+      where: { id: requirementId },
+    });
+
+    return { success: true, message: "Requisito apagado com sucesso" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: formatError(error) };
+  }
+}
