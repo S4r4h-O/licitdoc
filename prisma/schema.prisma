@@ -143,6 +143,7 @@ model DocumentRequirement {
   @@index([userId])
 }
 
+// TODO: CONNECT FILE TO ORGANIZATION
 model DocumentFile {
   id                    String @id @default(uuid()) @db.Uuid
   documentRequirementId String @db.Uuid
@@ -155,6 +156,8 @@ model DocumentFile {
   issueDate        DateTime?
   expirationDate   DateTime?
   documentNumber   String?
+
+  s3Key String? @unique
 
   status DocumentStatus @default(VALIDO)
 
