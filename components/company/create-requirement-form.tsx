@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { JurisdictionLevel } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -30,6 +29,7 @@ import {
 } from "../ui/select";
 
 import { createDocumentRequirement } from "@/lib/actions/doc-requirement.actions";
+import { JurisdictionLevelValues } from "@/lib/contants/contants";
 import { DocumentRequirementInsertSchema } from "@/lib/validators";
 import FormInput from "../input";
 
@@ -63,7 +63,7 @@ export default function CreateDocumentRequirementForm() {
     router.refresh();
   }
 
-  const { MUNICIPAL, ESTADUAL, FEDERAL, OUTRO } = JurisdictionLevel;
+  const { MUNICIPAL, ESTADUAL, FEDERAL, OUTRO } = JurisdictionLevelValues;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -98,7 +98,10 @@ export default function CreateDocumentRequirementForm() {
                 name="jurisdictionLevel"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? undefined}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>

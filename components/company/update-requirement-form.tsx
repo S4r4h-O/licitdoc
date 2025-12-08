@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DocumentRequirement, JurisdictionLevel } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -16,6 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+
+import { DocumentRequirement } from "@/types";
+import { JurisdictionLevelValues } from "@/lib/contants/contants";
 
 import { updateDocumentRequirement } from "@/lib/actions/doc-requirement.actions";
 import {
@@ -33,7 +35,7 @@ export default function UpdateDocumentRequirementForm({
     resolver: zodResolver(DocumentRequirementFormSchema),
     defaultValues: {
       name: docRequirement.name,
-      jurisdictionLevel: docRequirement.jurisdictionLevel ?? undefined,
+      jurisdictionLevel: docRequirement.jurisdictionLevel || undefined,
     },
   });
 
@@ -54,7 +56,7 @@ export default function UpdateDocumentRequirementForm({
     router.refresh();
   }
 
-  const { MUNICIPAL, ESTADUAL, FEDERAL, OUTRO } = JurisdictionLevel;
+  const { MUNICIPAL, ESTADUAL, FEDERAL, OUTRO } = JurisdictionLevelValues;
 
   return (
     <div className="max-w-2xl p-6">
@@ -86,7 +88,10 @@ export default function UpdateDocumentRequirementForm({
               name="jurisdictionLevel"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? undefined}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
