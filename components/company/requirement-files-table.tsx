@@ -41,10 +41,9 @@ import {
   TableRow,
 } from "../ui/table";
 
+import { deleteDocumentFile } from "@/lib/actions/document-file.actions";
 import { formatFileSize } from "@/lib/utils";
 import DeleteDialog from "../delete-dialog";
-import { deleteDocumentFile } from "@/lib/actions/document-file.actions";
-import DataTable from "../data-table";
 
 export default function RequirementFilesTable({
   data,
