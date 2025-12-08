@@ -27,3 +27,10 @@ export const brStates = [
   "SE",
   "TO",
 ];
+
+export const JurisdictionLevelValues = {
+  MUNICIPAL: "MUNICIPAL",
+  ESTADUAL: "ESTADUAL",
+  FEDERAL: "FEDERAL",
+  OUTRO: "OUTRO",
+} as const;
