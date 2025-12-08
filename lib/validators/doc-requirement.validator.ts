@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { JurisdictionLevel } from "@prisma/client";
 
-const { ESTADUAL, FEDERAL, MUNICIPAL, OUTRO } = JurisdictionLevel;
+import { JurisdictionLevelValues } from "../contants/contants";
+
+const { ESTADUAL, FEDERAL, MUNICIPAL, OUTRO } = JurisdictionLevelValues;
 
 export const DocumentRequirementSchema = z.object({
   name: z
