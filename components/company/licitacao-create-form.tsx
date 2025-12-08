@@ -2,12 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ContractingAuthority } from "@prisma/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
 import {
   Dialog,
   DialogClose,
@@ -18,6 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import { Field, FieldError, FieldLabel } from "../ui/field";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Select,
   SelectContent,
@@ -26,16 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { ptBR } from "date-fns/locale";
-import { format } from "date-fns";
 
 import { createLicitacao } from "@/lib/actions/licitacao.actions";
+import { cn } from "@/lib/utils";
 import { LicitacaoFormSchema } from "@/lib/validators";
 import FormInput from "../input";
-import { Field, FieldError, FieldLabel } from "../ui/field";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { cn } from "@/lib/utils";
-import { Calendar } from "../ui/calendar";
 
 export default function LicitacaoCreateForm({
   authorities,
@@ -96,7 +96,6 @@ export default function LicitacaoCreateForm({
               label="Número do processo"
             />
 
-            {/* TODO: USE SHADCN CALENDAR */}
             <Controller
               control={form.control}
               name="openingDate"
@@ -121,7 +120,7 @@ export default function LicitacaoCreateForm({
                     <PopoverContent className="mx-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={field.value ?? undefined}
                         onSelect={field.onChange}
                       />
                     </PopoverContent>
@@ -139,7 +138,7 @@ export default function LicitacaoCreateForm({
               Órgão contratante
             </span>
             <Controller
-              name="contractor"
+              name="contractorId"
               control={form.control}
               render={({ field, fieldState }) => (
                 <div className="space-y-1">
@@ -151,9 +150,8 @@ export default function LicitacaoCreateForm({
                       <SelectGroup>
                         {authorities.map((authority) => (
                           <SelectItem
-                            value={authority.id}
-                            key={authority.name}
-                            onSelect={(e) => e.preventDefault()}
+                            value={authority.id ?? ""}
+                            key={authority.id}
                           >
                             {authority.name}
                           </SelectItem>
