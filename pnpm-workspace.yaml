@@ -4,3 +4,4 @@ onlyBuiltDependencies:
   - aws-sdk
   - core-js-pure
   - prisma
+  - sharp
