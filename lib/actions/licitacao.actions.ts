@@ -7,7 +7,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { formatError } from "../utils";
-import { LicitacaoFormSchema, LicitacaoInsertSchema } from "../validators";
+import {
+  LicitacaoFormSchema,
+  LicitacaoInsertSchema,
+  LicitacaoUpdateSchema,
+} from "../validators";
 
 type LicitacaoWithContractor = Prisma.LicitacaoGetPayload<{
   include: { contractor: true };
@@ -89,9 +93,11 @@ export async function createLicitacao(
   try {
     await prisma.licitacao.create({
       data: {
-        ...validated,
+        licitacaoNumber: validated.licitacaoNumber,
+        processNumber: validated.processNumber,
+        openingDate: validated.openingDate,
         company: { connect: { clerkOrgId } },
-        contractor: { connect: { id: validated.contractor } },
+        contractor: { connect: { id: validated.contractorId } },
       },
     });
 
@@ -232,6 +238,46 @@ export async function removeRequirementFromLicitacao(
     return { success: true, message: "Requisito removido" };
   } catch (error) {
     console.error("An error occurred trying to remove the requirement:", error);
+    return { success: false, message: formatError(error) };
+  }
+}
+
+export async function updateLicitacao(
+  licitacaoId: string,
+  data: z.infer<typeof LicitacaoFormSchema>,
+): Promise<{ success: boolean; message: any }> {
+  const { orgId: clerkOrgId, userId: clerkUserId } = await auth();
+
+  if (!clerkOrgId) {
+    return { success: false, message: "Organização não encontrada" };
+  }
+  if (!clerkUserId) {
+    return {
+      success: false,
+      message: "Não autenticado ou usuário não encontrado",
+    };
+  }
+
+  const licitacao = await prisma.licitacao.findUnique({
+    where: { id: licitacaoId },
+  });
+
+  if (!licitacao) {
+    return { success: false, message: "Licitação não encontrada" };
+  }
+
+  const validated = LicitacaoUpdateSchema.parse(data);
+
+  try {
+    await prisma.licitacao.update({
+      where: { id: licitacaoId },
+      data: validated,
+    });
+
+    revalidatePath(`/empresa/licitacoes/${licitacaoId}`);
+    return { success: true, message: "Licitação atualizada com sucesso" };
+  } catch (error) {
+    console.error("Erro ao atualizar licitação:", error);
     return { success: false, message: formatError(error) };
   }
 }
