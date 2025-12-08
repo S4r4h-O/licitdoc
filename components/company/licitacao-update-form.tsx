@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ContractingAuthority, Licitacao } from "@prisma/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
@@ -23,7 +22,10 @@ import {
 } from "../ui/select";
 
 import { LicitacaoFormSchema } from "@/lib/validators";
+import { ContractingAuthority, Licitacao } from "@/types";
 import FormInput from "../input";
+import { updateLicitacao } from "@/lib/actions/licitacao.actions";
+import { toast } from "sonner";
 
 type LicitacaoWithContractor = Licitacao & {
   contractor: ContractingAuthority;
@@ -41,7 +43,7 @@ export default function LicitacaoUpdateForm({
     defaultValues: {
       licitacaoNumber: licitacao.licitacaoNumber ?? "",
       processNumber: licitacao.processNumber ?? "",
-      contractor: licitacao.contractorId,
+      contractorId: licitacao.contractorId,
       openingDate: licitacao.openingDate ?? undefined,
     },
   });
@@ -49,7 +51,14 @@ export default function LicitacaoUpdateForm({
   const router = useRouter();
 
   async function onSubmit(data: z.output<typeof LicitacaoFormSchema>) {
-    console.log(data);
+    const res = await updateLicitacao(licitacao.id, data);
+    if (!res.success) {
+      toast.error(res.message);
+      return;
+    }
+
+    toast.success(res.message);
+    router.refresh();
   }
 
   const formName = "licitacao-create-form";
@@ -100,9 +109,8 @@ export default function LicitacaoUpdateForm({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value}
+                      selected={field.value ?? undefined}
                       onSelect={field.onChange}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -118,7 +126,7 @@ export default function LicitacaoUpdateForm({
               Órgão contratante
             </span>
             <Controller
-              name="contractor"
+              name="contractorId"
               control={form.control}
               render={({ field, fieldState }) => (
                 <div>
