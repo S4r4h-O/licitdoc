@@ -1,4 +1,5 @@
 import { prisma } from "@/prisma/client";
+import { Prisma } from "@prisma/client";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@clerk/nextjs/server";
 import archiver from "archiver";
@@ -6,6 +7,16 @@ import { NextRequest } from "next/server";
 import { Readable } from "stream";
 
 import { s3Client } from "@/lib/s3";
+
+type RequirementWithDocs = Prisma.LicitacaoRequirementGetPayload<{
+  include: {
+    requirement: {
+      include: {
+        documents: true;
+      };
+    };
+  };
+}>;
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +39,7 @@ export async function GET(
   }
 
   // search for requirements and latest documents
-  const requirements = await prisma.licitacaoRequirement.findMany({
+  const requirements = (await prisma.licitacaoRequirement.findMany({
     where: { licitacaoId },
     include: {
       requirement: {
@@ -41,7 +52,7 @@ export async function GET(
         },
       },
     },
-  });
+  })) as RequirementWithDocs[];
 
   // filter requirements with 0 docs
   const missingRequirements = requirements
