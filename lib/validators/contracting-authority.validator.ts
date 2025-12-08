@@ -9,7 +9,10 @@ export const ContractingAuthoritySchema = z.object({
     .string()
     .min(3, "Cidade deve ter no mínimo 3 caracteres")
     .nullable(),
-  addressState: z.string().min(2, "Estado deve ter no mínimo 2 caracteres"),
+  addressState: z
+    .string()
+    .min(2, "Estado deve ter no mínimo 2 caracteres")
+    .nullable(),
 });
 
 export const ContractingAuthorityInsertSchema =
