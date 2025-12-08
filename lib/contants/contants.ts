@@ -34,3 +34,8 @@ export const JurisdictionLevelValues = {
   FEDERAL: "FEDERAL",
   OUTRO: "OUTRO",
 } as const;
+
+export const DocumentStatusValues = {
+  VALIDO: "VALIDO",
+  INVALIDO: "INVALIDO",
+} as const;
