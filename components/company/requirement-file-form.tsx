@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DocumentRequirement, DocumentStatus } from "@prisma/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
@@ -27,7 +26,9 @@ import {
 
 import { createDocumentFile } from "@/lib/actions/document-file.actions";
 import { uploadFileToS3 } from "@/lib/actions/s3.actions";
+import { DocumentStatusValues } from "@/lib/contants/contants";
 import { DocumentFileFormSchema } from "@/lib/validators";
+import { DocumentRequirement } from "@/types";
 import UploadFile from "../upload-file";
 
 export default function DocumentFileForm({
@@ -42,7 +43,7 @@ export default function DocumentFileForm({
   const [uploadKey, setUploadKey] = useState(0);
   const [file, setFile] = useState<File | null>(null);
 
-  const { VALIDO, INVALIDO } = DocumentStatus;
+  const { VALIDO, INVALIDO } = DocumentStatusValues;
 
   const form = useForm<z.infer<typeof DocumentFileFormSchema>>({
     resolver: zodResolver(DocumentFileFormSchema),
