@@ -34,7 +34,7 @@ import {
 import { brStates } from "@/lib/contants/contants";
 import { createAuthorityDefaultValues } from "@/lib/contants/defaultValues";
 import { ContractingAuthorityFormSchema } from "@/lib/validators";
-import { ContractingAuthority } from "@prisma/client";
+import { ContractingAuthority } from "@/types";
 import FormInput from "../input";
 
 export default function ContractingAuthorityForm({
@@ -128,7 +128,7 @@ export default function ContractingAuthorityForm({
                     render={({ field }) => (
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        value={field.value ?? undefined}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="UF" />
