@@ -1,27 +1,6 @@
 "use client";
 
-import * as React from "react";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  ChevronDown,
-  ArrowUpDown,
-  MoreHorizontal,
-  Pencil,
-  Trash,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -40,10 +19,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ContractingAuthority } from "@prisma/client";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  Pencil,
+  Trash,
+} from "lucide-react";
+import * as React from "react";
+
 import ContractingAuthorityForm from "@/components/company/contracting-authority-form";
-import DeleteDialog from "../delete-dialog";
 import { deleteAuthority } from "@/lib/actions/authority.actions";
+import { ContractingAuthority } from "@/types";
+import DeleteDialog from "../delete-dialog";
 
 export default function AuthoritiesTable({
   data,
