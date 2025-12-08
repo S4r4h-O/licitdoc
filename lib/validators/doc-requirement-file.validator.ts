@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { DocumentStatus } from "@prisma/client";
 
-const { VALIDO, INVALIDO } = DocumentStatus;
+import { DocumentStatusValues } from "../contants/contants";
+
+const { VALIDO, INVALIDO } = DocumentStatusValues;
 
 export const DocumentFileSchema = z.object({
   fileName: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
