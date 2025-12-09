@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useState } from "react";
 
 import { createLicitacao } from "@/lib/actions/licitacao.actions";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ export default function LicitacaoCreateForm({
   const form = useForm<z.infer<typeof LicitacaoFormSchema>>({
     resolver: zodResolver(LicitacaoFormSchema),
   });
+  const [open, setOpen] = useState(false);
 
   const router = useRouter();
 
@@ -52,17 +54,19 @@ export default function LicitacaoCreateForm({
     const res = await createLicitacao(data);
     if (!res.success) {
       toast.error(res.message);
+      setOpen(false);
       return;
     }
 
     toast.success(res.message);
+    setOpen(false);
     router.refresh();
   }
 
   const formName = "licitacao-create-form";
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus size={16} /> Nova licitação
