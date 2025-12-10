@@ -181,8 +181,9 @@ model LicitacaoRequirement {
   licitacaoId   String @db.Uuid
   requirementId String @db.Uuid
 
-  licitacao   Licitacao           @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
-  requirement DocumentRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  licitacao   Licitacao            @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
+  requirement DocumentRequirement  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  submission  LicitacaoSubmission?
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
@@ -192,16 +193,19 @@ model LicitacaoRequirement {
 }
 
 model LicitacaoSubmission {
-  id             String @id @default(uuid()) @db.Uuid
-  licitacaoId    String @db.Uuid
-  documentFileId String @db.Uuid
+  id                     String  @id @default(uuid()) @db.Uuid
+  licitacaoId            String  @db.Uuid
+  licitacaoRequirementId String? @unique @db.Uuid
+  documentFileId         String  @db.Uuid
 
-  licitacao    Licitacao    @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
-  documentFile DocumentFile @relation(fields: [documentFileId], references: [id])
+  licitacao            Licitacao             @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
+  licitacaoRequirement LicitacaoRequirement? @relation(fields: [licitacaoRequirementId], references: [id], onDelete: Cascade)
+  documentFile         DocumentFile          @relation(fields: [documentFileId], references: [id])
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
   @@unique([licitacaoId, documentFileId])
   @@index([licitacaoId])
+  @@index([licitacaoRequirementId])
   @@index([documentFileId])
 }
