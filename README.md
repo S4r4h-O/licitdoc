@@ -69,3 +69,4 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 - [ ] Extract document information for auto filling
 - [ ] Not found errors for details pages
 - [ ] Do not use direct S3 links
+- [ ] Users sharing the same documents (how????)
