@@ -3,7 +3,11 @@ import ContractingAuthorityForm from "@/components/company/contracting-authority
 import { getAllAuthorities } from "@/lib/actions/authority.actions";
 
 export default async function AuthoritiesPage() {
-  const authorities = await getAllAuthorities();
+  const authoritiesResult = await getAllAuthorities();
+
+  if (!authoritiesResult.success) {
+    throw new Error(authoritiesResult.message);
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 w-full max-w-full h-full">
@@ -16,7 +20,7 @@ export default async function AuthoritiesPage() {
           <ContractingAuthorityForm mode="create" />
         </div>
       </div>
-      <AuthoritiesTable data={authorities} />
+      <AuthoritiesTable data={authoritiesResult.data} />
     </div>
   );
 }
