@@ -55,7 +55,15 @@ export async function createDocumentRequirement(
 }
 
 export async function getAllRequirements() {
-  return await prisma.documentRequirement.findMany();
+  const { orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId) {
+    console.log("");
+  }
+
+  return await prisma.documentRequirement.findMany({
+    where: { company: { clerkOrgId } },
+  });
 }
 
 export async function getDocumentRequirementById(id: string) {
