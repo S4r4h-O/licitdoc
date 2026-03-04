@@ -1,3 +1,4 @@
+import { createCompanyDefaultValues } from "@/lib/contants/defaultValues";
 import { prisma } from "@/prisma/client";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest, NextResponse } from "next/server";
@@ -34,6 +35,39 @@ export async function POST(req: NextRequest) {
           },
         });
         break;
+      }
+
+      // TODO: better validation
+      case "organization.created": {
+        const { created_by: clerkUserId, id: clerkOrgId } = evt.data;
+
+        if (!clerkOrgId) {
+          console.warn("Organization not found for clerkOrgId:", clerkOrgId);
+          break;
+        }
+
+        if (!clerkUserId) {
+          console.warn("User not found for userClerkId:", clerkUserId);
+          break;
+        }
+
+        try {
+          await prisma.$transaction(async (tx) => {
+            const company = await tx.company.create({
+              data: { clerkOrgId, ...createCompanyDefaultValues },
+            });
+
+            await tx.user.update({
+              where: { clerkId: clerkUserId },
+              data: { company: { connect: { clerkOrgId } } },
+            });
+          });
+
+          break;
+        } catch (error) {
+          console.warn(`Failed to create company`);
+          break;
+        }
       }
 
       case "organizationMembership.created": {
