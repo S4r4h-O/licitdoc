@@ -3,7 +3,8 @@
 Sistema de Gestão Documental para Licitações
 
 Obs: até a presente data esse sistema é apenas uma demonstração, tendo em vista
-que ainda não tenho planos de comercializar planos. Entre em contato comigo se gostaria de
+que ainda não tenho planos de comercializar planos. Entre em contato comigo se
+gostaria de
 implantá-lo e precisa de suporte
 
 Obs2: Ainda há funcionalidades inacabadas, trabalharei nelas em meu tempo livre.
@@ -12,7 +13,9 @@ Obs2: Ainda há funcionalidades inacabadas, trabalharei nelas em meu tempo livre
 
 ## Visão Geral
 
-O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo que empresas mantenham certidões, comprovantes e declarações atualizados, organizados e acessíveis.
+O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo que
+empresas mantenham certidões, comprovantes e declarações atualizados,
+organizados e acessíveis.
 
 ### Objetivos
 
@@ -25,7 +28,8 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 
 ## Stack Tecnológica
 
-- **Frontend**: Next.js (React, Tailwind CSS, React Hook Form, TanStack Table, React Flow, Archiver).
+- **Frontend**: Next.js (React, Tailwind CSS, React Hook Form, TanStack Table,
+  React Flow, Archiver).
 - **Backend**: Next.js API Routes.
 - **Banco de Dados**: PostgreSQL.
 - **Automação**: node-cron, Nodemailer.
@@ -36,10 +40,13 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 
 ## Funcionalidades Principais
 
-- **Cadastro de Empresas**: Registro de empresas clientes e configuração de planos.
+- **Cadastro de Empresas**: Registro de empresas clientes e configuração de
+  planos.
 - **Gerenciamento de Documentos**: Upload, metadados e controle de validade.
-- **Alertas Automáticos**: Notificações por e-mail/Slack para documentos próximos do vencimento.
-- **Montagem de Pastas**: Seleção automática de documentos com base nos requisitos do edital.
+- **Alertas Automáticos**: Notificações por e-mail/Slack para documentos
+  próximos do vencimento.
+- **Montagem de Pastas**: Seleção automática de documentos com base nos
+  requisitos do edital.
 - **Relatórios**: Exportação de dados para CSV/PDF.
 - **Geração de Pasta Zip**: Download de documentos selecionados em formato ZIP.
 
@@ -64,9 +71,24 @@ O LicitaDoc é um sistema para gerenciar documentos de licitações, garantindo 
 ## TODOS
 
 - [ ] Abstract data tables
-- [ ] Use Prisma types instead of manually created types
+- [ ] Use Prisma types instead of manually created types when possible (server
+      side)
 - [ ] Abstract document upload
-- [ ] Extract document information for auto filling
+- [ ] Extract document information for autofilling
 - [ ] Not found errors for details pages
-- [ ] Do not use direct S3 links
-- [ ] Users sharing the same documents (how????)
+- [ ] Do not use direct S3 links (pre-signed urls, e.g
+      @aws-sdk/s3-request-presigner)
+- [x] Users shouldn't have access to other companies' documents
+- [ ] Write tests (vitest)
+- [ ] getAll[Something] actions should follow the pattern:
+
+```typescript
+export async function getAllSomething(): Promise<
+  | {
+      success: boolen;
+      data: Something[];
+    }
+  | { success: boolen; message: string }
+> {}
+```
+
