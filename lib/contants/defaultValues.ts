@@ -1,5 +1,4 @@
 export const createCompanyDefaultValues = {
-  clerkOrgId: "",
   razaoSocial: "",
   nomeFantasia: "",
   cnpj: "",
