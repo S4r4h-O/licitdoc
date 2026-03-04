@@ -4,6 +4,7 @@ import { prisma } from "@/prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { ContractingAuthority } from "@prisma/client";
 
 import { formatError } from "../utils";
 import {
@@ -14,21 +15,21 @@ import {
 
 export async function createContractingAuthority(
   data: z.infer<typeof ContractingAuthorityFormSchema>,
-) {
-  const { orgId, userId } = await auth();
+): Promise<{ success: boolean; message: string }> {
+  const { orgId: clerkOrgId, userId } = await auth();
 
   if (!userId) {
     return { success: false, message: "Não autenticado" };
   }
 
-  if (!orgId) {
+  if (!clerkOrgId) {
     return { success: false, message: "Organização não encontrada" };
   }
 
   const validated = ContractingAuthorityInsertSchema.parse(data);
 
   const existingAuthority = await prisma.contractingAuthority.findFirst({
-    where: { name: validated.name },
+    where: { name: validated.name, company: { clerkOrgId } },
   });
 
   if (existingAuthority) {
@@ -37,9 +38,13 @@ export async function createContractingAuthority(
 
   try {
     await prisma.contractingAuthority.create({
-      data: validated,
+      data: {
+        ...validated,
+        company: {
+          connect: { clerkOrgId },
+        },
+      },
     });
-
     revalidatePath("/empresa/orgaos");
     return { success: true, message: "Órgão criado com sucesso" };
   } catch (error) {
@@ -51,7 +56,7 @@ export async function createContractingAuthority(
 export async function updateAuthority(
   id: string,
   data: z.infer<typeof ContractingAuthorityUpdateSchema>,
-) {
+): Promise<{ success: boolean; message: string }> {
   const { userId, orgId } = await auth();
 
   if (!userId) {
@@ -81,15 +86,37 @@ export async function updateAuthority(
     return { success: true, message: "Órgão atualizado com successo" };
   } catch (error) {
     console.error("Failed to update authority:", error);
-    return { success: "False", message: formatError(error) };
+    return { success: false, message: formatError(error) };
   }
 }
 
-export async function getAllAuthorities() {
-  return await prisma.contractingAuthority.findMany();
+export async function getAllAuthorities(): Promise<
+  | { success: true; data: ContractingAuthority[] }
+  | { success: false; message: string }
+> {
+  const { orgId: clerkOrgId, userId } = await auth();
+
+  if (!userId) {
+    return { success: false, message: "Não autenticado ou não encontrado" };
+  }
+
+  if (!clerkOrgId) {
+    return { success: false, message: "Organização não encontrada" };
+  }
+
+  try {
+    const data = await prisma.contractingAuthority.findMany({
+      where: { company: { clerkOrgId } },
+    });
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
 }
 
-export async function deleteAuthority(id: string) {
+export async function deleteAuthority(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
   const authority = await prisma.contractingAuthority.findUnique({
     where: { id },
   });
