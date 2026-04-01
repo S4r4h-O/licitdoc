@@ -8,9 +8,10 @@ datasource db {
 
 // ------------------- USUÁRIOS E EMPRESAS -------------------
 
+// Empresa contratada (a que usa o sistema para participar de licitações)
 model Company {
   id           String  @id @default(uuid()) @db.Uuid
-  clerkOrgId   String? @unique
+  clerkOrgId   String? @unique // ID da organização no Clerk (auth provider)
   razaoSocial  String  @unique @db.VarChar(150)
   nomeFantasia String  @db.VarChar(100)
   logo         String?
@@ -18,6 +19,7 @@ model Company {
   email        String  @unique @db.VarChar(50)
   phone        String? @db.VarChar(20)
 
+  // Endereço completo (campos separados para permitir filtragem por estado/cidade)
   addressStreet     String
   addressNumber     String
   addressComplement String?
@@ -30,9 +32,9 @@ model Company {
   plan   Plans?
 
   members                User[]
-  documentRequirements   DocumentRequirement[]
-  licitacoes             Licitacao[]
-  contractingAuthorities ContractingAuthority[]
+  documentRequirements   DocumentRequirement[] // Catálogo de tipos de documento da empresa
+  licitacoes             Licitacao[] // Licitações acompanhadas pela empresa
+  contractingAuthorities ContractingAuthority[] // Órgãos públicos cadastrados pela empresa
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -54,9 +56,10 @@ enum Plans {
   PRO
 }
 
+// Usuário membro de uma empresa (pode ser null se ainda não vinculado a uma empresa)
 model User {
   id      String  @id @default(uuid()) @db.Uuid
-  clerkId String  @unique
+  clerkId String  @unique // ID do usuário no Clerk (auth provider)
   email   String  @unique
   name    String?
   image   String?
@@ -67,22 +70,23 @@ model User {
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
 
-  documentRequirements DocumentRequirement[]
+  documentRequirements DocumentRequirement[] // Requisitos criados por este usuário
 
   @@index([companyId])
 }
 
 // ------------------- ÓRGÃOS -------------------
 
+// Órgão público contratante (prefeitura, autarquia, etc.) cadastrado pela empresa
 model ContractingAuthority {
   id           String  @id @default(uuid()) @db.Uuid
-  companyId    String  @db.Uuid
+  companyId    String  @db.Uuid // Empresa que cadastrou este órgão
   name         String  @db.VarChar(100)
   addressState String?
   addressCity  String?
 
   company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  licitacoes Licitacao[]
+  licitacoes Licitacao[] // Licitações abertas por este órgão
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -92,16 +96,17 @@ model ContractingAuthority {
 
 // ------------------- LICITAÇÕES -------------------
 
+// Processo licitatório que a empresa está acompanhando ou participando
 model Licitacao {
   id              String    @id @default(uuid()) @db.Uuid
-  companyId       String    @db.Uuid
-  contractorId    String    @db.Uuid
-  licitacaoNumber String?   @db.VarChar(50)
-  processNumber   String?
-  openingDate     DateTime?
+  companyId       String    @db.Uuid // Empresa participante
+  contractorId    String    @db.Uuid // Órgão público que abriu a licitação
+  licitacaoNumber String?   @db.VarChar(50) // Número da licitação (ex: Pregão 001/2025)
+  processNumber   String? // Número do processo administrativo vinculado
+  openingDate     DateTime? // Data de abertura do certame
 
-  requirements LicitacaoRequirement[]
-  submissions  LicitacaoSubmission[]
+  requirements LicitacaoRequirement[] // Tipos de documento exigidos por esta licitação
+  submissions  LicitacaoSubmission[] // Arquivos submetidos para esta licitação
   company      Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contractor   ContractingAuthority   @relation(fields: [contractorId], references: [id], onDelete: Cascade)
 
@@ -114,6 +119,7 @@ model Licitacao {
 
 // ------------------- DOCUMENTOS E REQUISITOS -------------------
 
+// Esfera de validade do documento (define de qual nível de governo o documento emana)
 enum JurisdictionLevel {
   FEDERAL
   ESTADUAL
@@ -126,18 +132,20 @@ enum DocumentStatus {
   INVALIDO
 }
 
+// Tipo de documento exigível (ex: "Certidão Negativa Federal", "Balanço Patrimonial")
+// Atua como catálogo reutilizável de requisitos documentais da empresa
 model DocumentRequirement {
   id                String             @id @default(uuid()) @db.Uuid
   companyId         String             @db.Uuid
-  userId            String             @db.Uuid
+  userId            String             @db.Uuid // Usuário que criou este requisito
   name              String             @unique @db.VarChar(100)
-  jurisdictionLevel JurisdictionLevel?
+  jurisdictionLevel JurisdictionLevel? // Esfera do documento (federal, estadual, municipal)
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
-  documents  DocumentFile[]
-  licitacoes LicitacaoRequirement[]
+  documents  DocumentFile[] // Arquivos concretos que satisfazem este tipo de documento
+  licitacoes LicitacaoRequirement[] // Licitações que exigem este tipo de documento
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -148,27 +156,28 @@ model DocumentRequirement {
 }
 
 // TODO: CONNECT FILE TO ORGANIZATION
+// Arquivo concreto de um documento (instância física de um DocumentRequirement)
 model DocumentFile {
   id                    String @id @default(uuid()) @db.Uuid
-  documentRequirementId String @db.Uuid
+  documentRequirementId String @db.Uuid // Tipo de documento ao qual este arquivo pertence
 
   fileName String
-  fileUrl  String
+  fileUrl  String?
   fileSize Int?
 
-  issuingAuthority String?
-  issueDate        DateTime?
-  expirationDate   DateTime?
-  documentNumber   String?
+  issuingAuthority String? // Órgão emissor do documento
+  issueDate        DateTime? // Data de emissão
+  expirationDate   DateTime? // Data de validade (usado para alertas de vencimento)
+  documentNumber   String? // Número do documento (ex: número da certidão)
 
-  s3Key String? @unique
+  s3Key String? @unique // Chave do arquivo no bucket S3
 
   status DocumentStatus @default(VALIDO)
 
-  deletedAt DateTime?
+  deletedAt DateTime? // Soft delete: arquivo removido mas mantido no banco
 
   requirement DocumentRequirement   @relation(fields: [documentRequirementId], references: [id], onDelete: Cascade)
-  submissions LicitacaoSubmission[]
+  submissions LicitacaoSubmission[] // Licitações para as quais este arquivo foi submetido
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt
@@ -181,6 +190,9 @@ model DocumentFile {
 
 // ------------------- RELAÇÕES -------------------
 
+// Vínculo entre uma licitação e um tipo de documento exigido por ela
+// Representa "esta licitação exige este tipo de documento"
+// É o nó central que permite rastrear quais requisitos foram ou não atendidos por submissions
 model LicitacaoRequirement {
   id            String @id @default(uuid()) @db.Uuid
   licitacaoId   String @db.Uuid
@@ -188,19 +200,22 @@ model LicitacaoRequirement {
 
   licitacao   Licitacao            @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
   requirement DocumentRequirement  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
-  submission  LicitacaoSubmission?
+  submission  LicitacaoSubmission? // Preenchido quando um arquivo for submetido para este requisito
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
-  @@unique([licitacaoId, requirementId])
+  @@unique([licitacaoId, requirementId]) // Um requisito não pode ser duplicado dentro da mesma licitação
   @@index([licitacaoId])
   @@index([requirementId])
 }
 
+// Registro de qual DocumentFile foi submetido para qual requisito de qual licitação
+// Criado quando uma pasta zip é gerada
+// ATENÇÃO: licitacaoId é redundante com licitacaoRequirement.licitacaoId — risco de inconsistência
 model LicitacaoSubmission {
   id                     String  @id @default(uuid()) @db.Uuid
-  licitacaoId            String  @db.Uuid
-  licitacaoRequirementId String? @unique @db.Uuid
+  licitacaoId            String  @db.Uuid // Redundante se licitacaoRequirementId estiver preenchido
+  licitacaoRequirementId String? @unique @db.Uuid // Nullable: submission pode existir sem requisito formal
   documentFileId         String  @db.Uuid
 
   licitacao            Licitacao             @relation(fields: [licitacaoId], references: [id], onDelete: Cascade)
@@ -209,7 +224,7 @@ model LicitacaoSubmission {
 
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
-  @@unique([licitacaoId, documentFileId])
+  @@unique([licitacaoId, documentFileId]) // Um arquivo não pode ser submetido duas vezes na mesma licitação
   @@index([licitacaoId])
   @@index([licitacaoRequirementId])
   @@index([documentFileId])
