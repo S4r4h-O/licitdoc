@@ -2,6 +2,7 @@
 
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3ServiceException,
   waitUntilObjectNotExists,
@@ -9,10 +10,12 @@ import {
 import { auth } from "@clerk/nextjs/server";
 
 import { s3Client } from "../s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // References: https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_s3_code_examples.html
 
 export async function uploadFileToS3(base64: string, fileName: string) {
+  // TODO: vinculate file with organization
   const { userId: clerkUserID, orgId: clerkOrgId } = await auth();
 
   /*
@@ -28,15 +31,13 @@ export async function uploadFileToS3(base64: string, fileName: string) {
     Bucket: bucketName,
     Key: key,
     Body: buffer,
+    ContentType: "application/pdf",
   });
 
   try {
     await s3Client.send(command);
 
-    return {
-      key,
-      fileUrl: `https://${bucketName}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`,
-    };
+    return key;
   } catch (error) {
     if (error instanceof S3ServiceException) {
       const isTooLarge = error.name === "EntityTooLarge";
@@ -74,4 +75,10 @@ export async function deleteFileFromS3(objectKey: string) {
     }
     throw error;
   }
+}
+
+export async function getS3DocumentPresignedUrl(key: string): Promise<string> {
+  const bucketName = process.env.S3_BUCKET;
+  const command = new GetObjectCommand({ Bucket: bucketName, Key: key });
+  return getSignedUrl(s3Client, command, { expiresIn: 300 });
 }
