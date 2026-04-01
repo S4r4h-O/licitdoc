@@ -73,6 +73,7 @@ organizados e acessíveis.
 - [ ] Abstract data tables
 - [ ] Use Prisma types instead of manually created types when possible (server
       side)
+- [ ] Write documentation
 - [ ] Abstract document upload
 - [ ] Extract document information for autofilling
 - [ ] Not found errors for details pages
@@ -91,4 +92,3 @@ export async function getAllSomething(): Promise<
   | { success: boolen; message: string }
 > {}
 ```
-
