@@ -1,7 +1,9 @@
 "use client";
 
+import { DocumentRequirement } from "@prisma/client";
 import {
   ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -10,8 +12,12 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, Trash } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
+
+import { deleteDocumentRequirement } from "@/lib/actions/doc-requirement.actions";
+import DeleteDialog from "../delete-dialog";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -31,10 +37,90 @@ import {
   TableRow,
 } from "../ui/table";
 
-import { DocumentRequirement } from "@prisma/client";
-import Link from "next/link";
-import DeleteDialog from "../delete-dialog";
-import { deleteDocumentRequirement } from "@/lib/actions/doc-requirement.actions";
+// Helpers
+
+function SortableHeader({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button variant="ghost" onClick={onClick}>
+      {label} <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+
+function ActionsCell({ id }: { id: string }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Abrir menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-56 bg-neutral-600 space-y-4 p-2 rounded-md"
+      >
+        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer focus:bg-accent rounded-md"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Link
+            href={`/empresa/requisitos/${id}`}
+            className="flex items-center w-full"
+          >
+            <Eye className="mr-2 h-4 w-4" /> Ver
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-md"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Trash className="mr-2 h-4 w-4" />
+          <DeleteDialog onConfirm={async () => deleteDocumentRequirement(id)} />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// Column definitions
+
+const columns: ColumnDef<DocumentRequirement>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => (
+      <SortableHeader
+        label="Nome"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      />
+    ),
+    cell: ({ row }) => <div>{row.getValue("name")}</div>,
+  },
+  {
+    accessorKey: "jurisdictionLevel",
+    header: ({ column }) => (
+      <SortableHeader
+        label="Jurisdição"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      />
+    ),
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => <ActionsCell id={row.original.id} />,
+  },
+];
+
+// Component
 
 export default function DocumentRequirementTable({
   data,
@@ -42,84 +128,7 @@ export default function DocumentRequirementTable({
   data: DocumentRequirement[];
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
-  const columns: ColumnDef<DocumentRequirement>[] = React.useMemo(
-    () => [
-      {
-        accessorKey: "name",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Nome <ArrowUpDown />
-            </Button>
-          );
-        },
-        cell: ({ row }) => <div className="">{row.getValue("name")}</div>,
-      },
-      {
-        accessorKey: "jurisdictionLevel",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Jurisdição <ArrowUpDown />
-            </Button>
-          );
-        },
-      },
-      {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Abrir menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 bg-neutral-600 space-y-4 p-2 rounded-md"
-            >
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer focus:bg-accent rounded-md"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Link
-                  href={`/empresa/requisitos/${row.original.id}`}
-                  className="flex items-center w-full"
-                >
-                  <Eye className="mr-2 h-4 w-4" /> Ver
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-md"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Trash className="mr-2 h-4 w-4" />{" "}
-                <DeleteDialog
-                  onConfirm={async () =>
-                    deleteDocumentRequirement(row.original.id)
-                  }
-                />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      },
-    ],
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
 
@@ -127,17 +136,23 @@ export default function DocumentRequirementTable({
     data,
     columns,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      columnFilters,
     },
   });
 
+  const visibleCount = table.getRowModel().rows.length;
+  const filteredCount = table.getFilteredRowModel().rows.length;
+
   return (
     <div className="w-full">
+      {/* Toolbar */}
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar Jurisdição"
@@ -152,28 +167,27 @@ export default function DocumentRequirementTable({
           className="max-w-sm"
         />
       </div>
+
+      {/* Table */}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGourp) => (
-              <TableRow key={headerGourp.id}>
-                {headerGourp.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {!header.isPlaceholder &&
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
@@ -199,10 +213,11 @@ export default function DocumentRequirementTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          Mostrando {table.getRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} registros
+          Mostrando {visibleCount} de {filteredCount} registros
         </div>
         <div className="space-x-2">
           <Button
