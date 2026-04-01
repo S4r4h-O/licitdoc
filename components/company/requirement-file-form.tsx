@@ -1,15 +1,21 @@
 "use client";
 
+import { createDocumentFile } from "@/lib/actions/document-file.actions";
+import { uploadFileToS3 } from "@/lib/actions/s3.actions";
+import { DocumentStatusValues } from "@/lib/contants/contants";
 import { cn } from "@/lib/utils";
+import { DocumentFileFormSchema } from "@/lib/validators";
+import { DocumentRequirement } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, UseFormReturn, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import UploadFile from "../upload-file";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { Field, FieldError, FieldLabel } from "../ui/field";
@@ -24,28 +30,77 @@ import {
   SelectValue,
 } from "../ui/select";
 
-import { createDocumentFile } from "@/lib/actions/document-file.actions";
-import { uploadFileToS3 } from "@/lib/actions/s3.actions";
-import { DocumentStatusValues } from "@/lib/contants/contants";
-import { DocumentFileFormSchema } from "@/lib/validators";
-import { DocumentRequirement } from "@/types";
-import UploadFile from "../upload-file";
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type FormValues = z.infer<typeof DocumentFileFormSchema>;
+
+// Subcomponents
+
+function DatePickerField({
+  name,
+  label,
+  formName,
+  form,
+}: {
+  name: "issueDate" | "expirationDate";
+  label: string;
+  formName: string;
+  form: UseFormReturn<FormValues>;
+}) {
+  return (
+    <Controller
+      name={name}
+      control={form.control}
+      render={({ field, fieldState }) => (
+        <Field className="space-y-1.5" aria-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={`${formName}-${name}`}>{label}</FieldLabel>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal bg-background",
+                  !field.value && "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {field.value
+                  ? format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                  : "Selecione uma data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+              />
+            </PopoverContent>
+          </Popover>
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  );
+}
+
+// Component
+
+const FORM_ID = "document-file-form";
 
 export default function DocumentFileForm({
   requirement,
 }: {
   requirement: DocumentRequirement;
 }) {
-  /* The upload key is needed to destroy the old
-   * state of the UploadFile component and therefore
-   * cleaning the input
-   */
+  /* uploadKey forces UploadFile to remount, resetting its internal file input */
   const [uploadKey, setUploadKey] = useState(0);
   const [file, setFile] = useState<File | null>(null);
 
   const { VALIDO, INVALIDO } = DocumentStatusValues;
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof DocumentFileFormSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(DocumentFileFormSchema),
     defaultValues: {
       status: VALIDO,
@@ -56,7 +111,10 @@ export default function DocumentFileForm({
     },
   });
 
-  const router = useRouter();
+  function resetForm() {
+    form.reset();
+    setUploadKey((prev) => prev + 1);
+  }
 
   async function onSubmit(data: z.output<typeof DocumentFileFormSchema>) {
     if (!file) {
@@ -65,22 +123,13 @@ export default function DocumentFileForm({
     }
 
     try {
-      /* Server actions allow only serializable data (JSON),
-       * so we need to convert the buffer to base64
-       */
+      /* Server actions only accept serializable data, so the buffer is base64-encoded */
       const buffer = await file.arrayBuffer();
       const base64 = Buffer.from(buffer).toString("base64");
-      const { key, fileUrl } = await uploadFileToS3(base64, file.name);
-      form.setValue("s3Key", key);
+      const s3Key = await uploadFileToS3(base64, file.name);
 
       const res = await createDocumentFile(
-        {
-          ...data,
-          fileUrl,
-          fileSize: file.size,
-          fileName: file.name,
-          s3Key: key,
-        },
+        { ...data, fileSize: file.size, fileName: file.name, s3Key },
         requirement.id,
       );
 
@@ -90,9 +139,8 @@ export default function DocumentFileForm({
       }
 
       toast.success(res.message);
-      form.reset();
+      resetForm();
       setFile(null);
-      setUploadKey((prev) => prev + 1);
       router.refresh();
     } catch (error) {
       console.error("Upload error:", error);
@@ -100,13 +148,11 @@ export default function DocumentFileForm({
     }
   }
 
-  const formName = "document-file-form";
-
   return (
     <div className="w-full p-6">
       <h1 className="text-2xl font-bold mb-6">Adicionar arquivo</h1>
       <form
-        id={formName}
+        id={FORM_ID}
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8"
       >
@@ -120,7 +166,7 @@ export default function DocumentFileForm({
                   className="space-y-1.5"
                   aria-invalid={fieldState.invalid}
                 >
-                  <FieldLabel htmlFor={`${formName}-issuingAuthority`}>
+                  <FieldLabel htmlFor={`${FORM_ID}-issuingAuthority`}>
                     Órgão Expedidor
                   </FieldLabel>
                   <Input
@@ -144,7 +190,7 @@ export default function DocumentFileForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field className="space-y-1.5" aria-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={`${formName}-documentNumber`}>
+                <FieldLabel htmlFor={`${FORM_ID}-documentNumber`}>
                   Número do documento
                 </FieldLabel>
                 <Input
@@ -167,7 +213,7 @@ export default function DocumentFileForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field className="space-y-1.5" aria-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={`${formName}-status`}>
+                <FieldLabel htmlFor={`${FORM_ID}-status`}>
                   Status do documento
                 </FieldLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
@@ -188,80 +234,18 @@ export default function DocumentFileForm({
             )}
           />
 
-          <Controller
+          <DatePickerField
             name="issueDate"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" aria-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={`${formName}-issueDate`}>
-                  Data de expedição
-                </FieldLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal bg-background",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value
-                        ? format(field.value, "dd/MM/yyy", { locale: ptBR })
-                        : "Selecione uma data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            label="Data de expedição"
+            formName={FORM_ID}
+            form={form}
           />
 
-          <Controller
+          <DatePickerField
             name="expirationDate"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field className="space-y-1.5" aria-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={`${formName}-expirationDate`}>
-                  Data de vencimento
-                </FieldLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal bg-background",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value
-                        ? format(field.value, "dd/MM/yyy", { locale: ptBR })
-                        : "Selecione uma data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            label="Data de vencimento"
+            formName={FORM_ID}
+            form={form}
           />
 
           <div className="col-span-1 md:col-span-2 pt-2">
@@ -275,14 +259,7 @@ export default function DocumentFileForm({
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={() => {
-              form.reset;
-              setUploadKey((prev) => prev + 1);
-            }}
-          >
+          <Button variant="ghost" type="button" onClick={resetForm}>
             Limpar
           </Button>
           <Button
