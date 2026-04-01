@@ -1,24 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -38,12 +20,127 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
-import * as React from "react";
 
 import ContractingAuthorityForm from "@/components/company/contracting-authority-form";
+import DeleteDialog from "../delete-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { deleteAuthority } from "@/lib/actions/authority.actions";
 import { ContractingAuthority } from "@/types";
-import DeleteDialog from "../delete-dialog";
+
+// Constants
+
+const COLUMN_LABELS: Record<string, string> = {
+  name: "Nome",
+  addressState: "Estado",
+  addressCity: "Cidade",
+};
+
+// Helpers
+
+function SortableHeader({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button variant="ghost" onClick={onClick}>
+      {label} <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+}
+
+function ActionsCell({ authority }: { authority: ContractingAuthority }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Abrir menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-56 bg-neutral-600 space-y-4 p-2 rounded-md"
+      >
+        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer flex focus:bg-accent rounded-md"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Pencil className="mr-2 h-4 w-4" />
+          <ContractingAuthorityForm mode="update" authority={authority} />
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-md"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Trash className="mr-2 h-4 w-4" />
+          <DeleteDialog
+            onConfirm={async () => await deleteAuthority(authority.id)}
+          />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// Column definitions
+
+const columns: ColumnDef<ContractingAuthority>[] = [
+  {
+    accessorKey: "name",
+    header: "Nome",
+    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+  },
+  {
+    accessorKey: "addressState",
+    header: ({ column }) => (
+      <SortableHeader
+        label="Estado"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      />
+    ),
+    cell: ({ row }) => <div>{row.getValue("addressState")}</div>,
+  },
+  {
+    accessorKey: "addressCity",
+    header: ({ column }) => (
+      <SortableHeader
+        label="Cidade"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      />
+    ),
+    cell: ({ row }) => <div>{row.getValue("addressCity")}</div>,
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => <ActionsCell authority={row.original} />,
+  },
+];
+
+// Component
 
 export default function AuthoritiesTable({
   data,
@@ -58,94 +155,17 @@ export default function AuthoritiesTable({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns: ColumnDef<ContractingAuthority>[] = React.useMemo(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Nome",
-        cell: ({ row }) => (
-          <div className="capitalize">{row.getValue("name")}</div>
-        ),
-      },
-      {
-        accessorKey: "addressState",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Estado <ArrowUpDown />
-          </Button>
-        ),
-        cell: ({ row }) => <div>{row.getValue("addressState")}</div>,
-      },
-      {
-        accessorKey: "addressCity",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Cidade <ArrowUpDown />
-          </Button>
-        ),
-        cell: ({ row }) => <div>{row.getValue("addressCity")}</div>,
-      },
-      {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Abrir menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 bg-neutral-600 space-y-4 p-2 rounded-md"
-            >
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer flex focus:bg-accent rounded-md"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                <ContractingAuthorityForm
-                  mode="update"
-                  authority={row.original}
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-md"
-                onSelect={(e) => e.preventDefault()}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                <DeleteDialog
-                  onConfirm={async () => await deleteAuthority(row.original.id)}
-                />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      },
-    ],
-    [],
-  );
-
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
@@ -159,8 +179,12 @@ export default function AuthoritiesTable({
     },
   });
 
+  const visibleCount = table.getRowModel().rows.length;
+  const filteredCount = table.getFilteredRowModel().rows.length;
+
   return (
     <div className="w-full space-y-4">
+      {/* Toolbar */}
       <div className="flex items-center justify-between">
         <Input
           placeholder="Filtrar nome..."
@@ -187,12 +211,14 @@ export default function AuthoritiesTable({
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
-                  {column.id}
+                  {COLUMN_LABELS[column.id] ?? column.id}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -200,19 +226,18 @@ export default function AuthoritiesTable({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                    {!header.isPlaceholder &&
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -241,10 +266,11 @@ export default function AuthoritiesTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          Mostrando {table.getRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} registros
+          Mostrando {visibleCount} de {filteredCount} registros
         </div>
         <div className="space-x-2">
           <Button
