@@ -104,6 +104,8 @@ export async function GET(
   // initialize zip stream
   const archive = archiver("zip", { zlib: { level: 9 } });
 
+  // TODO: nodejs webstream to fix this manual adaptation (Readable.toWeb(), Readable.fromWeb())
+
   // stream zip directly to client without buffering in memory
   const stream = new ReadableStream({
     async start(controller) {
@@ -117,6 +119,7 @@ export async function GET(
       // stream each file from s3 into zip
       for (const sub of submissionsData) {
         try {
+          // TODO: use presigned url
           const command = new GetObjectCommand({
             Bucket: process.env.S3_BUCKET,
             Key: sub.document.s3Key!,
